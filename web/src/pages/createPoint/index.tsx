@@ -5,6 +5,7 @@ import { Map, Marker, Popup, TileLayer } from 'react-leaflet';
 import api from '../../services/api';
 import axios from 'axios';
 import { LeafletMouseEvent } from 'leaflet';
+import Dropzone from '../../components/dropzone/index'
 
 import './styles.css';
 
@@ -23,6 +24,8 @@ interface IBGECityResponse {
   nome:string;
 };
 
+
+
 const CreatePoint = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [ufs, setUFs] = useState<string[]>([]);
@@ -35,6 +38,9 @@ const CreatePoint = () => {
   const [selectedCity, setSelectedCity] = useState('0');
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [selectedPosition, setSelectedPosition] = useState<[number, number]>(initialPosition);
+  const [selectedFile, setSelectedFile] = useState<File>();
+
+
   const [formData, setFormData] = useState({
     name:'',
     email: '',
@@ -116,16 +122,23 @@ const history = useHistory()
     const city = selectedCity;
     const [latitude, longitude] = selectedPosition;
     const items = selectedItems;
-    const data = {
-      name,
-      email,
-      whatsapp,
-      city,
-      uf,
-      latitude,
-      longitude,
-      items,
-    }
+
+    const data = new FormData();
+
+
+      data.append('name',name);
+      data.append('email',email);
+      data.append('whatsapp',whatsapp);
+      data.append('city',city);
+      data.append('uf',uf);
+      data.append('latitude',String(latitude));
+      data.append('longitude',String(longitude));
+      data.append('items',items.join(','));
+
+      if(selectedFile){
+        data.append('image', selectedFile)
+      }
+ 
     await api.post('points', data)
     alert('Ponto cadastrado com sucesso')
     history.push('/')
@@ -143,6 +156,9 @@ const history = useHistory()
             Cadastro do <br />
             ponto de coleta
           </h1>
+
+          <Dropzone onFileUploaded={setSelectedFile}/>
+
           <fieldset>
             <legend>
               <h2>Dados</h2>
@@ -223,7 +239,7 @@ const history = useHistory()
           </fieldset>
           <fieldset>
             <legend>
-              <h2>Ítems de coleta</h2>
+              <h2>Ítens de coleta</h2>
               <span>Selecione um ou mais itens de coleta</span>
             </legend>
             <ul className="items-grid">
